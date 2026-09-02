@@ -77,11 +77,11 @@ export default function Dashboard() {
 
   const totalApplied = applications?.length ?? 0;
   const acceptedCount =
-    applications?.filter((a: any) => a.status === "accepted").length ?? 0;
+    applications?.filter((a) => a.status === "accepted").length ?? 0;
   const avgMatchScore =
     topMatches.length > 0
       ? Math.round(
-          topMatches.reduce((sum: number, m: any) => sum + m.matchScore, 0) /
+          topMatches.reduce((sum, m) => sum + m.matchScore, 0) /
             topMatches.length,
         )
       : 0;
@@ -165,7 +165,7 @@ export default function Dashboard() {
               value: acceptedCount,
               color: "text-terracotta",
             },
-          ].map((stat, i) => (
+          ].map((stat) => (
             <div key={stat.label} className="clay-card p-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
@@ -297,7 +297,7 @@ export default function Dashboard() {
                       </p>
                     </div>
                   )}
-                  {topMatches.map((match: any, i: number) => (
+                  {topMatches.map((match, i) => (
                     <motion.div
                       key={match._id}
                       initial={{ opacity: 0, y: 10 }}
@@ -377,7 +377,7 @@ export default function Dashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {applications.map((app: any) => (
+                    {applications.map((app) => (
                       <div
                         key={app._id}
                         className="clay-card-sm p-4 flex items-center justify-between"

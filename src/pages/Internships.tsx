@@ -10,8 +10,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
-import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "convex/react";
+import type { Id } from "@/convex/_generated/dataModel";
 import {
   Search,
   MapPin,
@@ -36,7 +36,6 @@ const typeColors: Record<string, string> = {
 };
 
 export default function Internships() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const profile = useQuery(api.profiles.getMyProfile);
   const applications = useQuery(
@@ -49,34 +48,43 @@ export default function Internships() {
   const [typeFilter, setTypeFilter] = useState<string>("All");
   const [applyingId, setApplyingId] = useState<string | null>(null);
 
-  // If no profile, redirect to profile setup
-  if (profile === null) {
-    navigate("/profile");
-    return null;
-  }
-
   // Use matched internships if profile exists, otherwise list all open
   const matchedInternships = useQuery(
     api.internships.getMatches,
     profile ? { profileId: profile._id } : "skip",
   );
 
-  const internships = matchedInternships ?? [];
+  const internships = (matchedInternships ?? []) as Array<{
+    _id: string;
+    title: string;
+    organization: string;
+    description: string;
+    requiredSkills: string[];
+    preferredSkills: string[];
+    location: string;
+    duration: string;
+    stipend: string;
+    type: string;
+    deadline: number;
+    contactEmail: string;
+    matchScore?: number;
+  }>;
 
   // Applied internship IDs
   const appliedIds = useMemo(
-    () => new Set(applications?.map((a: any) => a.internshipId) ?? []),
+    () => new Set(applications?.map((a: { internshipId: string }) => a.internshipId) ?? []),
     [applications],
   );
 
   // Filter
   const filtered = useMemo(() => {
-    return internships.filter((i: any) => {
+    return internships.filter((i: { title: string; organization: string; description: string; requiredSkills: string[]; type: string }) => {
       const matchesSearch =
         searchQuery === "" ||
         i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         i.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        i.description.toLowerCase().includes(searchQuery.toLowerCase()) ||          i.requiredSkills.some((s: string) =>
+        i.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        i.requiredSkills.some((s: string) =>
             s.toLowerCase().includes(searchQuery.toLowerCase()),
           );
 
@@ -86,10 +94,16 @@ export default function Internships() {
     });
   }, [internships, searchQuery, typeFilter]);
 
+  // If no profile, redirect to profile setup
+  if (profile === null) {
+    navigate("/profile");
+    return null;
+  }
+
   const handleApply = async (internshipId: string) => {
     setApplyingId(internshipId);
     try {
-      await applyToInternship({ internshipId: internshipId as any });
+      await applyToInternship({ internshipId: internshipId as Id<"internships"> });
       toast.success("Application submitted!", {
         description: "You can track your applications from the dashboard.",
       });
@@ -183,7 +197,7 @@ export default function Internships() {
             </div>
           )}
 
-          {filtered.map((internship: any, i: number) => {
+          {filtered.map((internship, i) => {
             const isApplied = appliedIds.has(internship._id);
             const isApplying = applyingId === internship._id;
 
@@ -205,7 +219,7 @@ export default function Internships() {
                         >
                           {internship.type}
                         </Badge>
-                        {internship.matchScore > 0 && (
+                        {internship.matchScore != null && internship.matchScore > 0 && (
                           <Badge
                             variant="secondary"
                             className={`rounded-xl text-xs font-bold px-3 py-1 ${

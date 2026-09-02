@@ -21,7 +21,6 @@ import {
   ArrowRight,
   User,
   GraduationCap,
-  MapPin,
   Sparkles,
   CheckCircle2,
 } from "lucide-react";
