@@ -50,6 +50,7 @@
     "cmdk": "^1.1.1",
     "convex": "^1.30.0",
     "date-fns": "^4.1.0",
+    "docx": "^9.7.1",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.25",
     "hono": "^4.10.7",
