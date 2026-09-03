@@ -8,7 +8,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/80 border-b border-border/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to="/home" className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl clay-card-sm flex items-center justify-center bg-primary/10">
               <Leaf className="w-5 h-5 text-primary" />
             </div>

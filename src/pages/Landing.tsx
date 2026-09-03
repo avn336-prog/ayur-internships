@@ -97,7 +97,7 @@ export default function Landing() {
     title: "AyurSetu",
     description:
       "AyurSetu connects Ayurveda, Yoga and AYUSH students with curated internships at India's top research labs, clinical centers and wellness organizations.",
-    path: "/",
+    path: "/home",
   });
 
   return (

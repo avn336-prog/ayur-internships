@@ -126,7 +126,12 @@ createRoot(document.getElementById("root")!).render(
           <RouteSyncer />
           <Suspense fallback={<RouteLoading />}>
             <Routes>
-              <Route path="/" element={<Landing />} />
+              {/* The login page is the first thing users see */}
+              <Route
+                path="/"
+                element={<AuthPage redirectAfterAuth="/dashboard" />}
+              />
+              <Route path="/home" element={<Landing />} />
               <Route
                 path="/auth"
                 element={<AuthPage redirectAfterAuth="/dashboard" />}
