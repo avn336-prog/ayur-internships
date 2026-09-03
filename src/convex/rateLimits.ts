@@ -21,6 +21,10 @@ export const RATE_LIMITS = {
   profileSave: { limit: 10, windowMs: 60 * 60 * 1000 },
   /** Public contact form submissions per email address. */
   enquiry: { limit: 3, windowMs: 60 * 60 * 1000 },
+  /** Diary entry creation per user. */
+  diaryCreate: { limit: 20, windowMs: 60 * 60 * 1000 },
+  /** Daily task creation per user. */
+  taskCreate: { limit: 30, windowMs: 60 * 60 * 1000 },
 } as const;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;
