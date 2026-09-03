@@ -1,5 +1,8 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { SiteFooter } from "@/components/SiteFooter";
+import { useAuth } from "@/hooks/use-auth";
+import { usePageMeta } from "@/hooks/use-page-meta";
 import {
   Leaf,
   Search,
@@ -89,6 +92,14 @@ const testimonials = [
 ];
 
 export default function Landing() {
+  const { isAuthenticated } = useAuth();
+  usePageMeta({
+    title: "AyurSetu",
+    description:
+      "AyurSetu connects Ayurveda, Yoga and AYUSH students with curated internships at India's top research labs, clinical centers and wellness organizations.",
+    path: "/",
+  });
+
   return (
     <div className="min-h-screen overflow-x-hidden">
       {/* Navigation */}
@@ -465,33 +476,30 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border/50 py-10 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl clay-card-sm flex items-center justify-center bg-primary/10">
-              <Leaf className="w-4 h-4 text-primary" />
-            </div>
-            <span className="font-bold">
-              Ayur<span className="text-primary">Setu</span>
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            An initiative under the Ministry of AYUSH, Government of India
-          </p>
-          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-primary transition-colors">
-              Privacy
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
-              Terms
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
-              Contact
-            </a>
+      <SiteFooter />
+
+      {/* Sticky mobile CTA for signed-out visitors on small screens */}
+      {!isAuthenticated && (
+        <div className="md:hidden fixed bottom-0 inset-x-0 z-40 px-4 pb-4">
+          <div className="clay-card p-3 flex items-center justify-between gap-3 shadow-xl">
+            <p className="text-sm font-semibold leading-snug">
+              Find your{" "}
+              <span className="text-primary">Ayurveda internship</span>
+            </p>
+            <Link to="/auth" aria-label="Get started with AyurSetu">
+              <Button
+                size="sm"
+                className="clay-button rounded-xl shrink-0 h-10 px-4"
+              >
+                Get Started
+                <ArrowRight className="ml-1.5 w-4 h-4" />
+              </Button>
+            </Link>
           </div>
         </div>
-      </footer>
+      )}
+      {/* Clearance so the sticky bar never covers footer content on mobile */}
+      <div className="h-20 md:hidden" aria-hidden="true" />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
+import { usePageMeta } from "@/hooks/use-page-meta";
 import { useQuery, useMutation } from "convex/react";
 import { useNavigate, Link } from "react-router";
 import {
@@ -32,6 +33,13 @@ import {
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  usePageMeta({
+    title: "Dashboard",
+    description:
+      "Your AyurSetu dashboard — matched internships, application stats and profile summary.",
+    path: "/dashboard",
+  });
   const profile = useQuery(api.profiles.getMyProfile);
   const applications = useQuery(
     api.applications.getMyApplications,

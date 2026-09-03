@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { consumeRateLimit, minutesUntil } from "./rateLimits";
 
 // Get current user's profile
 export const getMyProfile = query({
@@ -32,6 +33,14 @@ export const upsertProfile = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
+
+    const rate = await consumeRateLimit(ctx, "profileSave", userId);
+    if (!rate.ok) {
+      throw new ConvexError({
+        code: "RATE_LIMITED",
+        message: `Profile updates are rate-limited — please wait ${minutesUntil(rate.retryAfterMs)} minute${minutesUntil(rate.retryAfterMs) === 1 ? "" : "s"}.`,
+      });
+    }
 
     const existing = await ctx.db
       .query("profiles")

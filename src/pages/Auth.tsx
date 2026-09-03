@@ -14,7 +14,10 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
+import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
+import { usePageMeta } from "@/hooks/use-page-meta";
+import { useMutation } from "convex/react";
 import { Leaf, ArrowRight, Loader2, Mail, UserX } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
@@ -35,7 +38,16 @@ function resolveRedirectAfterAuth(
 
 function Auth({ redirectAfterAuth }: AuthProps = {}) {
   const { isLoading: authLoading, isAuthenticated, signIn } = useAuth();
+  const checkOtpSend = useMutation(api.rateLimits.checkOtpSend);
+  const checkOtpVerify = useMutation(api.rateLimits.checkOtpVerify);
   const navigate = useNavigate();
+
+  usePageMeta({
+    title: "Sign In",
+    description:
+      "Sign in to AyurSetu with your email to find matched Ayurveda and AYUSH internships.",
+    path: "/auth",
+  });
   const [searchParams] = useSearchParams();
   const redirect = resolveRedirectAfterAuth(
     searchParams.get("returnTo"),
@@ -57,8 +69,21 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     setError(null);
     try {
       const formData = new FormData(event.currentTarget);
+      const email = (formData.get("email") as string) ?? "";
+
+      // Server-side rate gate: consume one OTP-send allowance per address
+      // before the email is ever dispatched (the send itself runs inside
+      // the Convex Auth library, which we cannot intercept).
+      const gate = await checkOtpSend({ email });
+      if (!gate.ok) {
+        const minutes = Math.max(1, Math.ceil(gate.retryAfterMs / 60_000));
+        throw new Error(
+          `Too many sign-in codes requested for this email. Please wait ${minutes} minute${minutes === 1 ? "" : "s"} and try again.`,
+        );
+      }
+
       await signIn("email-otp", formData);
-      setStep({ email: formData.get("email") as string });
+      setStep({ email });
       setIsLoading(false);
     } catch (error) {
       console.error("Email sign-in error:", error);
@@ -77,11 +102,26 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
     setError(null);
     try {
       const formData = new FormData(event.currentTarget);
+      const email = (formData.get("email") as string) ?? "";
+
+      // Limit verification attempts per address as well.
+      const gate = await checkOtpVerify({ email });
+      if (!gate.ok) {
+        const minutes = Math.max(1, Math.ceil(gate.retryAfterMs / 60_000));
+        throw new Error(
+          `Too many verification attempts for this email. Please wait ${minutes} minute${minutes === 1 ? "" : "s"} and try again.`,
+        );
+      }
+
       await signIn("email-otp", formData);
       navigate(redirect);
     } catch (error) {
       console.error("OTP verification error:", error);
-      setError("The verification code you entered is incorrect.");
+      setError(
+        error instanceof Error && error.message.startsWith("Too many")
+          ? error.message
+          : "The verification code you entered is incorrect.",
+      );
       setIsLoading(false);
       setOtp("");
     }

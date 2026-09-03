@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { consumeRateLimit, minutesUntil } from "./rateLimits";
 
 // Apply to an internship
 export const apply = mutation({
@@ -8,6 +9,14 @@ export const apply = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Not authenticated");
+
+    const rate = await consumeRateLimit(ctx, "apply", userId);
+    if (!rate.ok) {
+      throw new ConvexError({
+        code: "RATE_LIMITED",
+        message: `You're applying quite quickly — please wait ${minutesUntil(rate.retryAfterMs)} minute${minutesUntil(rate.retryAfterMs) === 1 ? "" : "s"} before applying again.`,
+      });
+    }
 
     const profile = await ctx.db
       .query("profiles")

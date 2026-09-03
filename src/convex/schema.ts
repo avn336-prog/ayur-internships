@@ -80,6 +80,23 @@ const schema = defineSchema(
     }).index("by_student", ["studentId"])
       .index("by_internship", ["internshipId"])
       .index("by_student_internship", ["studentId", "internshipId"]),
+
+    // Fixed-window rate limiting counters (bucket key embeds the window,
+    // so stale buckets self-expire; cleanup is opportunistic)
+    rateLimits: defineTable({
+      key: v.string(), // e.g. "otpSend:user@example.com:12345"
+      windowStart: v.number(),
+      count: v.number(),
+    }).index("by_key", ["key"]),
+
+    // Contact/partnership enquiries from the public contact form
+    enquiries: defineTable({
+      name: v.string(),
+      email: v.string(),
+      organization: v.optional(v.string()),
+      message: v.string(),
+      createdAt: v.number(),
+    }).index("by_email", ["email"]),
   },
   {
     schemaValidation: false,

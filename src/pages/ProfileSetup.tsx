@@ -14,8 +14,11 @@ import {
 } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
+import { usePageMeta } from "@/hooks/use-page-meta";
+import { getErrorMessage } from "@/lib/convex-error";
 import { useMutation, useQuery } from "convex/react";
 import { useNavigate } from "react-router";
+import { toast } from "sonner";
 import {
   Loader2,
   ArrowRight,
@@ -54,6 +57,13 @@ const years = [
 export default function ProfileSetup() {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  usePageMeta({
+    title: "Set Up Your Profile",
+    description:
+      "Build your Ayurveda-specific profile — degree, skills and interests — to unlock matched internships.",
+    path: "/profile",
+  });
   const existingProfile = useQuery(api.profiles.getMyProfile);
   const upsertProfile = useMutation(api.profiles.upsertProfile);
   const seedInternships = useMutation(api.internships.seed);
@@ -143,6 +153,12 @@ export default function ProfileSetup() {
       navigate("/dashboard");
     } catch (error) {
       console.error("Profile save error:", error);
+      toast.error(
+        getErrorMessage(
+          error,
+          "We couldn't save your profile. Please try again.",
+        ),
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -10,6 +10,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
+import { usePageMeta } from "@/hooks/use-page-meta";
+import { getErrorMessage } from "@/lib/convex-error";
 import { useQuery, useMutation } from "convex/react";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
@@ -37,6 +39,12 @@ const typeColors: Record<string, string> = {
 
 export default function Internships() {
   const navigate = useNavigate();
+  usePageMeta({
+    title: "Browse Internships",
+    description:
+      "Search and filter Ayurveda, Yoga and AYUSH internships matched to your skills, then apply in one click.",
+    path: "/internships",
+  });
   const profile = useQuery(api.profiles.getMyProfile);
   const applications = useQuery(
     api.applications.getMyApplications,
@@ -94,6 +102,15 @@ export default function Internships() {
     });
   }, [internships, searchQuery, typeFilter]);
 
+  // Loading state (profile query is in flight)
+  if (profile === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   // If no profile, redirect to profile setup
   if (profile === null) {
     navigate("/profile");
@@ -109,7 +126,7 @@ export default function Internships() {
       });
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to apply",
+        getErrorMessage(error, "Failed to apply. Please try again."),
       );
     } finally {
       setApplyingId(null);
