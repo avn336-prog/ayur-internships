@@ -13,7 +13,7 @@ export const list = query({
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
 
-    let q = ctx.db
+    const q = ctx.db
       .query("diaryEntries")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc");

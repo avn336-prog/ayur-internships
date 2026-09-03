@@ -90,13 +90,6 @@ export default function AyurvedaScene() {
       emissive: C.petalDeep,
       emissiveIntensity: 0.05,
     });
-    const petalTip = new THREE.MeshStandardMaterial({
-      color: C.petalLight,
-      flatShading: true,
-      roughness: 0.8,
-      metalness: 0.05,
-    });
-
     const petals = new THREE.Group();
     lotus.add(petals);
 

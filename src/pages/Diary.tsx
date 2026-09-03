@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
+import type { Doc } from "@/convex/_generated/dataModel";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { getErrorMessage } from "@/lib/convex-error";
 import { currentStreak, shiftDate, strToShortDisplay, todayStr } from "@/lib/progress";
@@ -40,6 +41,214 @@ const MOODS = [
   { key: "tired", label: "Tired", emoji: "😴" },
 ];
 
+type Entry = Doc<"diaryEntries">;
+
+interface EntryFormProps {
+  date: string;
+  entry: Entry | null;
+  entryLoading: boolean;
+  isToday: boolean;
+  onSave: (payload: { title: string; content: string; mood?: string }) => Promise<void>;
+  onDelete: () => Promise<void>;
+  onGoToday: () => void;
+}
+
+/**
+ * Owns the diary form state for one date. The parent mounts it with a `key`
+ * of `${date}:${entryId}` so switching dates / saved entries resets the form
+ * naturally — no effect-based state syncing required.
+ */
+function EntryForm({
+  date,
+  entry,
+  entryLoading,
+  isToday,
+  onSave,
+  onDelete,
+  onGoToday,
+}: EntryFormProps) {
+  const [title, setTitle] = useState(entry?.title ?? "");
+  const [content, setContent] = useState(entry?.content ?? "");
+  const [mood, setMood] = useState<string>(entry?.mood ?? "");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isBusy, setIsBusy] = useState(false);
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim()) return;
+    setIsBusy(true);
+    try {
+      await onSave({
+        title: title.trim(),
+        content: content.trim(),
+        mood: mood || undefined,
+      });
+      toast.success(entry ? "Diary entry updated" : "Diary entry saved");
+    } catch (error) {
+      console.error("Diary save error:", error);
+      toast.error(
+        getErrorMessage(error, "We couldn't save this entry. Please try again."),
+      );
+    } finally {
+      setIsBusy(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!entry) return;
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      window.setTimeout(() => setConfirmDelete(false), 3500);
+      return;
+    }
+    setIsBusy(true);
+    try {
+      await onDelete();
+      toast.success("Diary entry deleted");
+    } catch (error) {
+      console.error("Diary delete error:", error);
+      toast.error(
+        getErrorMessage(error, "We couldn't delete this entry. Please try again."),
+      );
+    } finally {
+      setIsBusy(false);
+      setConfirmDelete(false);
+    }
+  };
+
+  return (
+    <Card className="clay-card border-0">
+      <CardHeader className="pb-4">
+        {/* Date picker row */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 text-primary" />
+            {entry ? "Edit your day" : "Write your day"}
+          </CardTitle>
+          {!isToday && (
+            <Button
+              variant="outline"
+              className="clay-inset border-0 rounded-xl h-9 text-sm"
+              onClick={onGoToday}
+            >
+              Today
+            </Button>
+          )}
+        </div>
+        <CardDescription>
+          {strToShortDisplay(date)}
+          {entry && (
+            <span className="ml-2 text-primary font-medium">
+              • entry saved
+            </span>
+          )}
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-5">
+        {entryLoading ? (
+          <div className="space-y-3">
+            <div className="h-6 w-40 bg-muted animate-pulse rounded-lg" />
+            <div className="h-11 w-full bg-muted animate-pulse rounded-xl" />
+            <div className="h-48 w-full bg-muted animate-pulse rounded-xl" />
+          </div>
+        ) : (
+          <>
+            {/* Mood selector */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">How was your day?</Label>
+              <div className="flex flex-wrap gap-2">
+                {MOODS.map((m) => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => setMood(mood === m.key ? "" : m.key)}
+                    className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      mood === m.key
+                        ? "clay-card bg-primary text-primary-foreground"
+                        : "clay-inset text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <span className="mr-1.5">{m.emoji}</span>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Title</Label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. First day assisting Shirodhara therapy"
+                className="clay-inset border-0 rounded-xl h-11"
+                maxLength={120}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">
+                Today&apos;s reflections
+              </Label>
+              <Textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="What did you learn, practise or observe today? Which herbs, procedures or texts did you study? What made you proud, and what will you do differently tomorrow?"
+                className="clay-inset border-0 rounded-xl min-h-[220px] resize-y"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Button
+                className="clay-button rounded-xl h-11 font-semibold min-w-[160px]"
+                onClick={handleSave}
+                disabled={isBusy || !title.trim() || !content.trim()}
+              >
+                {isBusy ? (
+                  <>
+                    <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 w-4 h-4" />
+                    {entry ? "Update entry" : "Save entry"}
+                  </>
+                )}
+              </Button>
+              {entry && (
+                <Button
+                  variant="outline"
+                  className={`rounded-xl h-11 font-medium border-0 ${
+                    confirmDelete
+                      ? "bg-destructive text-destructive-foreground"
+                      : "clay-inset text-destructive hover:text-destructive"
+                  }`}
+                  onClick={handleDelete}
+                  disabled={isBusy}
+                >
+                  <Trash2 className="mr-2 w-4 h-4" />
+                  {confirmDelete ? "Confirm delete?" : "Delete"}
+                </Button>
+              )}
+              {!isToday && (
+                <Button
+                  variant="ghost"
+                  className="rounded-xl text-sm text-muted-foreground"
+                  onClick={onGoToday}
+                >
+                  <PenLine className="mr-1.5 w-4 h-4" />
+                  Write about today instead
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Diary() {
   usePageMeta({
     title: "Internship Diary",
@@ -49,11 +258,7 @@ export default function Diary() {
   });
 
   const [selectedDate, setSelectedDate] = useState(todayStr());
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [mood, setMood] = useState<string>("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const today = todayStr();
 
   const entriesByDate = useQuery(api.diary.listByDate, {
     date: selectedDate,
@@ -63,15 +268,7 @@ export default function Diary() {
   const updateEntry = useMutation(api.diary.update);
   const removeEntry = useMutation(api.diary.remove);
 
-  const entry = entriesByDate?.[0];
-
-  // Prefill the form whenever the selected date / entry changes
-  useEffect(() => {
-    setTitle(entry?.title ?? "");
-    setContent(entry?.content ?? "");
-    setMood(entry?.mood ?? "");
-    setConfirmDelete(false);
-  }, [selectedDate, entry?._id, entry?.title, entry?.content, entry?.mood]);
+  const entry = entriesByDate?.[0] ?? null;
 
   const streak = useMemo(
     () => currentStreak((allEntries ?? []).map((e) => e.date)),
@@ -99,61 +296,25 @@ export default function Diary() {
     [allEntries],
   );
 
-  const isToday = selectedDate === todayStr();
+  const isToday = selectedDate === today;
+  const goTo = (date: string) => setSelectedDate(date);
 
-  const handleSave = async () => {
-    if (!title.trim() || !content.trim()) return;
-    setIsSaving(true);
-    try {
-      if (entry) {
-        await updateEntry({
-          entryId: entry._id,
-          title: title.trim(),
-          content: content.trim(),
-          mood: mood || undefined,
-        });
-      } else {
-        await createEntry({
-          date: selectedDate,
-          title: title.trim(),
-          content: content.trim(),
-          mood: mood || undefined,
-        });
-      }
-      toast.success(entry ? "Diary entry updated" : "Diary entry saved");
-    } catch (error) {
-      console.error("Diary save error:", error);
-      toast.error(
-        getErrorMessage(error, "We couldn't save this entry. Please try again."),
-      );
-    } finally {
-      setIsSaving(false);
+  const handleSave = async (payload: {
+    title: string;
+    content: string;
+    mood?: string;
+  }) => {
+    if (entry) {
+      await updateEntry({ entryId: entry._id, ...payload });
+    } else {
+      await createEntry({ date: selectedDate, ...payload });
     }
   };
 
   const handleDelete = async () => {
     if (!entry) return;
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-      window.setTimeout(() => setConfirmDelete(false), 3500);
-      return;
-    }
-    setIsSaving(true);
-    try {
-      await removeEntry({ entryId: entry._id });
-      toast.success("Diary entry deleted");
-    } catch (error) {
-      console.error("Diary delete error:", error);
-      toast.error(
-        getErrorMessage(error, "We couldn't delete this entry. Please try again."),
-      );
-    } finally {
-      setIsSaving(false);
-      setConfirmDelete(false);
-    }
+    await removeEntry({ entryId: entry._id });
   };
-
-  const isLoading = entriesByDate === undefined;
 
   return (
     <div className="min-h-screen bg-background">
@@ -185,174 +346,51 @@ export default function Diary() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Editor */}
+          {/* Editor + date picker */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
             className="lg:col-span-2"
           >
-            <Card className="clay-card border-0">
-              <CardHeader className="pb-4">
-                {/* Date picker row */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5 text-primary" />
-                    {entry ? "Edit your day" : "Write your day"}
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="clay-inset border-0 rounded-xl h-9 w-9"
-                      onClick={() => setSelectedDate(shiftDate(selectedDate, -1))}
-                      title="Previous day"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <Input
-                      type="date"
-                      value={selectedDate}
-                      max={todayStr()}
-                      onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-                      className="clay-inset border-0 rounded-xl h-9 w-[150px] text-sm"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="clay-inset border-0 rounded-xl h-9 w-9"
-                      onClick={() => setSelectedDate(shiftDate(selectedDate, 1))}
-                      title="Next day"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                    {!isToday && (
-                      <Button
-                        variant="outline"
-                        className="clay-inset border-0 rounded-xl h-9 text-sm"
-                        onClick={() => setSelectedDate(todayStr())}
-                      >
-                        Today
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <CardDescription>
-                  {strToShortDisplay(selectedDate)}
-                  {entry && (
-                    <span className="ml-2 text-primary font-medium">
-                      • entry saved
-                    </span>
-                  )}
-                </CardDescription>
-              </CardHeader>
+            <div className="flex items-center justify-end gap-2 mb-3">
+              <Button
+                variant="outline"
+                size="icon"
+                className="clay-inset border-0 rounded-xl h-9 w-9"
+                onClick={() => goTo(shiftDate(selectedDate, -1))}
+                title="Previous day"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Input
+                type="date"
+                value={selectedDate}
+                max={today}
+                onChange={(e) => e.target.value && goTo(e.target.value)}
+                className="clay-inset border-0 rounded-xl h-9 w-[160px] text-sm"
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                className="clay-inset border-0 rounded-xl h-9 w-9"
+                onClick={() => goTo(shiftDate(selectedDate, 1))}
+                title="Next day"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
 
-              <CardContent className="space-y-5">
-                {isLoading ? (
-                  <div className="space-y-3">
-                    <div className="h-6 w-40 bg-muted animate-pulse rounded-lg" />
-                    <div className="h-11 w-full bg-muted animate-pulse rounded-xl" />
-                    <div className="h-48 w-full bg-muted animate-pulse rounded-xl" />
-                  </div>
-                ) : (
-                  <>
-                    {/* Mood selector */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold">
-                        How was your day?
-                      </Label>
-                      <div className="flex flex-wrap gap-2">
-                        {MOODS.map((m) => (
-                          <button
-                            key={m.key}
-                            type="button"
-                            onClick={() =>
-                              setMood(mood === m.key ? "" : m.key)
-                            }
-                            className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                              mood === m.key
-                                ? "clay-card bg-primary text-primary-foreground"
-                                : "clay-inset text-muted-foreground hover:text-foreground"
-                            }`}
-                          >
-                            <span className="mr-1.5">{m.emoji}</span>
-                            {m.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Title</Label>
-                      <Input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="e.g. First day assisting Shirodhara therapy"
-                        className="clay-inset border-0 rounded-xl h-11"
-                        maxLength={120}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold">
-                        Today&apos;s reflections
-                      </Label>
-                      <Textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="What did you learn, practise or observe today? Which herbs, procedures or texts did you study? What made you proud, and what will you do differently tomorrow?"
-                        className="clay-inset border-0 rounded-xl min-h-[220px] resize-y"
-                      />
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3 pt-1">
-                      <Button
-                        className="clay-button rounded-xl h-11 font-semibold min-w-[160px]"
-                        onClick={handleSave}
-                        disabled={isSaving || !title.trim() || !content.trim()}
-                      >
-                        {isSaving ? (
-                          <>
-                            <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <Save className="mr-2 w-4 h-4" />
-                            {entry ? "Update entry" : "Save entry"}
-                          </>
-                        )}
-                      </Button>
-                      {entry && (
-                        <Button
-                          variant="outline"
-                          className={`rounded-xl h-11 font-medium border-0 ${
-                            confirmDelete
-                              ? "bg-destructive text-destructive-foreground"
-                              : "clay-inset text-destructive hover:text-destructive"
-                          }`}
-                          onClick={handleDelete}
-                          disabled={isSaving}
-                        >
-                          <Trash2 className="mr-2 w-4 h-4" />
-                          {confirmDelete ? "Confirm delete?" : "Delete"}
-                        </Button>
-                      )}
-                      {!isToday && (
-                        <Button
-                          variant="ghost"
-                          className="rounded-xl text-sm text-muted-foreground"
-                          onClick={() => setSelectedDate(todayStr())}
-                        >
-                          <PenLine className="mr-1.5 w-4 h-4" />
-                          Write about today instead
-                        </Button>
-                      )}
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+            <EntryForm
+              key={`${selectedDate}:${entry?._id ?? "new"}`}
+              date={selectedDate}
+              entry={entry}
+              entryLoading={entriesByDate === undefined}
+              isToday={isToday}
+              onSave={handleSave}
+              onDelete={handleDelete}
+              onGoToday={() => goTo(today)}
+            />
           </motion.div>
 
           {/* Sidebar: stats + recent entries */}
@@ -438,7 +476,7 @@ export default function Diary() {
                       <button
                         key={e._id}
                         type="button"
-                        onClick={() => setSelectedDate(e.date)}
+                        onClick={() => goTo(e.date)}
                         className={`w-full text-left p-3 rounded-xl transition-all duration-200 ${
                           e.date === selectedDate
                             ? "clay-card bg-primary/10"
@@ -449,9 +487,7 @@ export default function Diary() {
                           <span className="font-semibold text-sm truncate">
                             {e.mood && (
                               <span className="mr-1.5">
-                                {
-                                  MOODS.find((m) => m.key === e.mood)?.emoji
-                                }
+                                {MOODS.find((m) => m.key === e.mood)?.emoji}
                               </span>
                             )}
                             {e.title || "Untitled entry"}
