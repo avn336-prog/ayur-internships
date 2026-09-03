@@ -56,18 +56,20 @@ export default function Dashboard() {
   );
   const seedInternships = useMutation(api.internships.seed);
   const seedMoreInternships = useMutation(api.seedMore.seedMore);
+  const seedMore2Internships = useMutation(api.seedMore2.seedMore2);
   const diaryEntries = useQuery(api.diary.list, {});
   const tasksToday = useQuery(api.dailyTasks.listByDate, {
     date: todayStr(),
   });
 
-  // Seed the base list, then append the extended 50-internship catalogue
+  // Seed the base list, then append the extended catalogues (2 × 50 more)
   useEffect(() => {
     void (async () => {
       await seedInternships();
       await seedMoreInternships();
+      await seedMore2Internships();
     })();
-  }, [seedInternships, seedMoreInternships]);
+  }, [seedInternships, seedMoreInternships, seedMore2Internships]);
 
   // Redirect to profile setup if no profile
   useEffect(() => {
