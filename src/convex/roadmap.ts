@@ -2,7 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { query } from "./_generated/server";
 
 // Roadmap resource suggestions mapped to skills
-const learningResources: Record<string, { title: string; type: string; resource: string }[]> = {
+export const learningResources: Record<string, { title: string; type: string; resource: string }[]> = {
   "Python": [
     { title: "Python for Everybody (Coursera)", type: "course", resource: "https://www.coursera.org/specializations/python" },
     { title: "Automate the Boring Stuff with Python", type: "book", resource: "https://automatetheboringstuff.com" },

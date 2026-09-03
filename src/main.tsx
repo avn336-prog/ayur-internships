@@ -16,6 +16,9 @@ const AuthPage = lazy(() => import("./pages/Auth.tsx"));
 const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup.tsx"));
 const Internships = lazy(() => import("./pages/Internships.tsx"));
+const Roadmap = lazy(() => import("./pages/Roadmap.tsx"));
+const Diary = lazy(() => import("./pages/Diary.tsx"));
+const Planner = lazy(() => import("./pages/Planner.tsx"));
 const Contact = lazy(() => import("./pages/Contact.tsx"));
 const Privacy = lazy(() => import("./pages/Privacy.tsx"));
 const Terms = lazy(() => import("./pages/Terms.tsx"));
@@ -157,6 +160,30 @@ createRoot(document.getElementById("root")!).render(
                 element={
                   <RequireAuth>
                     <Internships />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/roadmap"
+                element={
+                  <RequireAuth>
+                    <Roadmap />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/diary"
+                element={
+                  <RequireAuth>
+                    <Diary />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/planner"
+                element={
+                  <RequireAuth>
+                    <Planner />
                   </RequireAuth>
                 }
               />

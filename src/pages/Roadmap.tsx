@@ -12,7 +12,7 @@ import {
 import { api } from "@/convex/_generated/api";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { useQuery } from "convex/react";
-import { useNavigate, Link } from "react-router";
+import { Navigate, Link } from "react-router";
 import {
   ArrowLeft,
   TrendingUp,
@@ -44,7 +44,6 @@ export default function Roadmap() {
   });
 
   const roadmap = useQuery(api.roadmap.generate);
-  const navigate = useNavigate();
 
   if (roadmap === undefined) {
     return (
@@ -55,8 +54,7 @@ export default function Roadmap() {
   }
 
   if (roadmap === null) {
-    navigate("/profile");
-    return null;
+    return <Navigate to="/profile" replace />;
   }
 
   const { profile, topInternships, skillGaps, phases, summary } = roadmap;

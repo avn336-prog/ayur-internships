@@ -12,6 +12,7 @@ import {
 import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 import { usePageMeta } from "@/hooks/use-page-meta";
+import { currentStreak, todayStr } from "@/lib/progress";
 import { useQuery, useMutation } from "convex/react";
 import { useNavigate, Link } from "react-router";
 import {
@@ -28,6 +29,10 @@ import {
   Building2,
   TrendingUp,
   Sparkles,
+  Map,
+  NotebookPen,
+  ClipboardList,
+  Flame,
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -50,11 +55,19 @@ export default function Dashboard() {
     profile ? { profileId: profile._id } : "skip",
   );
   const seedInternships = useMutation(api.internships.seed);
+  const seedMoreInternships = useMutation(api.seedMore.seedMore);
+  const diaryEntries = useQuery(api.diary.list, {});
+  const tasksToday = useQuery(api.dailyTasks.listByDate, {
+    date: todayStr(),
+  });
 
-  // Seed data on first load
+  // Seed the base list, then append the extended 50-internship catalogue
   useEffect(() => {
-    seedInternships();
-  }, [seedInternships]);
+    void (async () => {
+      await seedInternships();
+      await seedMoreInternships();
+    })();
+  }, [seedInternships, seedMoreInternships]);
 
   // Redirect to profile setup if no profile
   useEffect(() => {
@@ -67,6 +80,12 @@ export default function Dashboard() {
     () => (matchedInternships ?? []).slice(0, 5),
     [matchedInternships],
   );
+
+  const diaryStreak = diaryEntries
+    ? currentStreak(diaryEntries.map((e) => e.date))
+    : null;
+  const todayTasks = tasksToday ?? [];
+  const doneToday = todayTasks.filter((t) => t.completed).length;
 
   const handleSignOut = async () => {
     await signOut();
@@ -139,6 +158,89 @@ export default function Dashboard() {
           <p className="mt-2 text-muted-foreground">
             Here&apos;s your AyurSetu internship dashboard
           </p>
+        </motion.div>
+
+        {/* Growth toolkit — roadmap, diary & planner */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8"
+        >
+          <Link
+            to="/roadmap"
+            className="clay-card p-5 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 group"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
+                <Map className="w-5 h-5 text-saffron" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <h3 className="font-bold text-base">Learning Roadmap</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              Skill-gap analysis with a curated 12-week plan built from your
+              profile and top internship matches.
+            </p>
+          </Link>
+
+          <Link
+            to="/diary"
+            className="clay-card p-5 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 group"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
+                <NotebookPen className="w-5 h-5 text-primary" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <h3 className="font-bold text-base">Internship Diary</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              {diaryEntries === undefined ? (
+                <span className="inline-flex items-center gap-1">
+                  <Flame className="w-3 h-3 text-terracotta" />
+                  <span className="inline-block w-16 h-3 bg-muted rounded animate-pulse" />
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-terracotta" />
+                  <span className="font-semibold text-foreground">
+                    {diaryStreak}-day streak
+                  </span>
+                  · {diaryEntries.length} entr
+                  {diaryEntries.length === 1 ? "y" : "ies"}
+                </span>
+              )}{" "}
+              Journal your daily learnings and keep the momentum.
+            </p>
+          </Link>
+
+          <Link
+            to="/planner"
+            className="clay-card p-5 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 group"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
+                <ClipboardList className="w-5 h-5 text-sky" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <h3 className="font-bold text-base">Daily Planner</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              {tasksToday === undefined ? (
+                <span className="inline-block w-20 h-3 bg-muted rounded animate-pulse" />
+              ) : todayTasks.length > 0 ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                  <span className="font-semibold text-foreground">
+                    {doneToday}/{todayTasks.length}
+                  </span>
+                  done today
+                </span>
+              ) : null}{" "}
+              Curated to-dos generated from your roadmap — plan each day.
+            </p>
+          </Link>
         </motion.div>
 
         {/* Stats */}

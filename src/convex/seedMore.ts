@@ -781,6 +781,38 @@ export const seedMore = mutation({
         contactEmail: "tribal-medicine@trifed.gov.in",
         postedAt: p(9),
       },
+      {
+        title: "Ayurveda Nutraceutical Regulatory Affairs Intern",
+        organization: "Zandu Pharmaceutical Works (Emami Group)",
+        description:
+          "Assist the regulatory team in compiling dossiers for Ayurvedic nutraceutical products. Review label claims, track CDSCO and FSSAI compliance updates, and help prepare documentation for product license renewals.",
+        requiredSkills: ["Ayurvedic Medicine", "Quality Control", "Report Writing"],
+        preferredSkills: ["Regulatory Affairs", "GMP", "Documentation", "Communication"],
+        location: "Kolkata, West Bengal",
+        duration: "3 months",
+        stipend: "₹13,000/month",
+        type: "Industry",
+        status: "open" as const,
+        deadline: d(40),
+        contactEmail: "regulatory@zandu.in",
+        postedAt: p(4),
+      },
+      {
+        title: "Ayurveda Media & PR Communications Intern",
+        organization: "Khadi Natural (The Ayurveda Company)",
+        description:
+          "Support media relations and public communications for an Ayurveda personal-care brand. Draft press releases about new herbal launches, coordinate PR events, and track media coverage of Ayurveda industry trends.",
+        requiredSkills: ["Communication", "Content Writing", "Digital Marketing"],
+        preferredSkills: ["Media Relations", "Social Media", "Event Management", "Report Writing"],
+        location: "Bengaluru (Hybrid)",
+        duration: "3 months",
+        stipend: "₹11,000/month",
+        type: "Industry",
+        status: "open" as const,
+        deadline: d(25),
+        contactEmail: "pr@khadinatural.in",
+        postedAt: p(2),
+      },
     ];
 
     for (const internship of internships) {
