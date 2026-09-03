@@ -97,6 +97,29 @@ const schema = defineSchema(
       message: v.string(),
       createdAt: v.number(),
     }).index("by_email", ["email"]),
+
+    // Internship diary entries
+    diaryEntries: defineTable({
+      userId: v.id("users"),
+      date: v.string(), // YYYY-MM-DD
+      title: v.string(),
+      content: v.string(),
+      mood: v.optional(v.string()), // e.g. "productive", "challenging", "great", "neutral"
+      tags: v.optional(v.array(v.string())),
+      createdAt: v.number(),
+    }).index("by_user", ["userId"])
+      .index("by_user_date", ["userId", "date"]),
+
+    // Daily tasks / to-do list
+    dailyTasks: defineTable({
+      userId: v.id("users"),
+      date: v.string(), // YYYY-MM-DD
+      title: v.string(),
+      completed: v.boolean(),
+      category: v.optional(v.string()), // "learning", "practice", "application", "reading"
+      createdAt: v.number(),
+    }).index("by_user_date", ["userId", "date"])
+      .index("by_user", ["userId"]),
   },
   {
     schemaValidation: false,
