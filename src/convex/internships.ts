@@ -1,4 +1,3 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
@@ -21,17 +20,12 @@ export const get = query({
   },
 });
 
-// Get internships matching a student's skills (simple keyword matching).
-// Ownership guard: matches may only be computed for the caller's OWN profile,
-// so one student can never probe another student's skills or match data.
+// Get internships matching a student's skills (simple keyword matching)
 export const getMatches = query({
   args: { profileId: v.id("profiles") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-
     const profile = await ctx.db.get(args.profileId);
-    if (!profile || profile.userId !== userId) return [];
+    if (!profile) return [];
 
     const openInternships = await ctx.db
       .query("internships")

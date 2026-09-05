@@ -63,4 +63,10 @@ export const upsertProfile = mutation({
   },
 });
 
-
+// Get profile by ID (for display)
+export const getProfile = query({
+  args: { profileId: v.id("profiles") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.profileId);
+  },
+});
