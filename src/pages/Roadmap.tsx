@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +13,9 @@ import { api } from "@/convex/_generated/api";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { useQuery } from "convex/react";
 import { Navigate, Link } from "react-router";
+import { todayStr } from "@/lib/progress";
+import BackToDashboard from "@/components/BackToDashboard";
 import {
-  ArrowLeft,
   TrendingUp,
   Target,
   BookOpen,
@@ -25,6 +27,14 @@ import {
   AlertCircle,
   Sparkles,
   GraduationCap,
+  Clock,
+  Calendar,
+  Flame,
+  BarChart3,
+  Zap,
+  Sun,
+  Moon,
+  Sunrise,
 } from "lucide-react";
 
 const typeColors: Record<string, string> = {
@@ -34,11 +44,175 @@ const typeColors: Record<string, string> = {
   tool: "bg-purple-100 text-purple-700",
 };
 
+const routineIcons: Record<string, typeof Sun> = {
+  morning: Sunrise,
+  afternoon: Sun,
+  evening: Moon,
+  flexible: Clock,
+};
+
+const availabilityLabels: Record<string, string> = {
+  "full-time": "Full-time Intensive",
+  "part-time": "Part-time Steady",
+  "weekends-only": "Weekend Focused",
+  flexible: "Flexible Pace",
+};
+
+/* ── Progress Report Card ──────────────────────────────────────────────────── */
+
+function ProgressReport({
+  skillGaps,
+}: {
+  skillGaps: Array<{ skill: string; type: string }>;
+}) {
+  const diaryEntries = useQuery(api.diary.list, {});
+
+  // Stable date references (computed once, not on every render)
+  const monthAgo = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split("T")[0];
+  }, []);
+
+  const allTasks = useQuery(api.dailyTasks.listByRange, {
+    startDate: monthAgo,
+    endDate: todayStr(),
+  });
+
+  const completedTasks = allTasks?.filter((t) => t.completed) ?? [];
+  const totalTasks = allTasks?.length ?? 0;
+  const completionRate = totalTasks > 0 ? Math.round((completedTasks.length / totalTasks) * 100) : 0;
+
+  // Skills being learned (from gap analysis, skills that have resources)
+  const activeSkills = skillGaps.filter((g) => g.type === "required").length;
+
+  // Stable now reference (useEffect-safe pattern)
+  const [now] = useState(() => Date.now());
+
+  // Weekly progress (last 4 weeks)
+  const weeklyData = useMemo(() => {
+    if (!allTasks) return [];
+    const weeks: { label: string; done: number; total: number }[] = [];
+    for (let w = 3; w >= 0; w--) {
+      const weekStart = new Date(now - (w + 1) * 7 * 24 * 60 * 60 * 1000);
+      const weekEnd = new Date(now - w * 7 * 24 * 60 * 60 * 1000);
+      const startStr = weekStart.toISOString().split("T")[0];
+      const endStr = weekEnd.toISOString().split("T")[0];
+      const weekTasks = allTasks.filter((t) => t.date >= startStr && t.date <= endStr);
+      weeks.push({
+        label: `W${4 - w}`,
+        done: weekTasks.filter((t) => t.completed).length,
+        total: weekTasks.length,
+      });
+    }
+    return weeks;
+  }, [allTasks, now]);
+
+  const maxWeek = Math.max(...weeklyData.map((w) => w.total), 1);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.6 }}
+    >
+      <Card className="clay-card border-0">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle>Progress Report</CardTitle>
+              <CardDescription>
+                Your learning journey over the last 30 days
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {/* Stats row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { icon: CheckCircle2, label: "Tasks Done", value: completedTasks.length, color: "text-primary" },
+              { icon: Flame, label: "Diary Entries", value: diaryEntries?.length ?? 0, color: "text-terracotta" },
+              { icon: Target, label: "Skills to Learn", value: activeSkills, color: "text-saffron" },
+              { icon: Zap, label: "Completion", value: `${completionRate}%`, color: "text-sky" },
+            ].map((stat) => (
+              <div key={stat.label} className="clay-inset rounded-xl p-3 text-center">
+                <stat.icon className={`w-4 h-4 ${stat.color} mx-auto mb-1`} />
+                <div className="text-lg font-extrabold">{stat.value}</div>
+                <div className="text-[10px] text-muted-foreground">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Weekly bar chart */}
+          {weeklyData.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                Weekly Activity
+              </h4>
+              <div className="flex items-end gap-2 h-24">
+                {weeklyData.map((week, i) => (
+                  <div key={week.label} className="flex-1 flex flex-col items-center gap-1">
+                    <div className="w-full relative h-16 bg-muted/30 rounded-lg overflow-hidden">
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${week.total > 0 ? (week.done / maxWeek) * 100 : 0}%` }}
+                        transition={{ delay: 0.8 + i * 0.1, duration: 0.6 }}
+                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-primary/60 rounded-lg"
+                      />
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${week.total > 0 ? (week.total / maxWeek) * 100 : 0}%` }}
+                        transition={{ delay: 0.7 + i * 0.1, duration: 0.5 }}
+                        className="absolute bottom-0 left-0 right-0 bg-muted/50 rounded-lg -z-0"
+                      />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-medium">{week.label}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded bg-primary" /> Completed
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded bg-muted/50" /> Total
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Motivational nudge */}
+          {completionRate < 50 && totalTasks > 0 && (
+            <div className="clay-inset rounded-xl p-4 flex items-start gap-3">
+              <Sparkles className="w-5 h-5 text-saffron shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold">Keep going! 💪</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  You&apos;ve completed {completionRate}% of your tasks this month.
+                  {completionRate < 25
+                    ? " Try setting smaller daily goals to build momentum."
+                    : " You're building great habits — consistency is key!"}
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+/* ── Main Roadmap Page ─────────────────────────────────────────────────────── */
+
 export default function Roadmap() {
   usePageMeta({
     title: "Learning Roadmap",
     description:
-      "Your personalized Ayurveda learning roadmap — discover skill gaps and get curated resources to land your dream internship.",
+      "Your personalized Ayurveda learning roadmap — discover skill gaps, get a curated schedule, and track your progress.",
     path: "/roadmap",
   });
 
@@ -57,30 +231,73 @@ export default function Roadmap() {
   }
 
   const { profile, topInternships, skillGaps, phases, summary } = roadmap;
+  const avail = profile.availability || "part-time";
+  const routine = profile.routine || "flexible";
+  const hours = profile.hoursPerWeek || 20;
+  const RoutineIcon = routineIcons[routine] || Clock;
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
+        <BackToDashboard />
+
         <motion.div
-          initial={{ opacity: 0, y: -15 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </Link>
           <h1 className="text-3xl font-extrabold tracking-tight">
             Your Learning Roadmap
           </h1>
-          <p className="mt-2 text-muted-foreground">
-            Personalized skill gap analysis and curated learning plan based on
-            your profile and top matched internships.
+          <p className="mt-2 text-muted-foreground max-w-2xl">
+            A structured, availability-aware plan to close your skill gaps and land your dream internship.
           </p>
+        </motion.div>
+
+        {/* Availability Summary Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="clay-card p-4 mb-6 flex flex-wrap items-center gap-4 sm:gap-6"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Calendar className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Plan Length</div>
+              <div className="text-sm font-bold">{phases.reduce((s, p) => s + (p.weeks || 4), 0)} weeks</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-saffron/10 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-saffron" />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Schedule</div>
+              <div className="text-sm font-bold">{availabilityLabels[avail] || avail}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-sky/10 flex items-center justify-center">
+              <RoutineIcon className="w-4 h-4 text-sky" />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Best Time</div>
+              <div className="text-sm font-bold capitalize">{routine}</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-terracotta/10 flex items-center justify-center">
+              <Zap className="w-4 h-4 text-terracotta" />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Weekly Hours</div>
+              <div className="text-sm font-bold">{hours}h/week</div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Summary Stats */}
@@ -115,26 +332,33 @@ export default function Roadmap() {
               value: `${summary.averageScore}%`,
               color: "text-sky",
             },
-          ].map((stat) => (
-            <div key={stat.label} className="clay-card p-5">
-              <div className="flex items-center gap-3">
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 15, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.1 + i * 0.08, type: "spring" }}
+              whileHover={{ y: -2 }}
+              className="clay-card p-5 group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
                   <stat.icon className={`w-5 h-5 ${stat.color}`} />
                 </div>
                 <div>
-                  <div className="text-2xl font-extrabold">{stat.value}</div>
-                  <div className="text-xs text-muted-foreground font-medium">
-                    {stat.label}
-                  </div>
+                  <div className="text-2xl font-extrabold tabular-nums">{stat.value}</div>
+                  <div className="text-xs text-muted-foreground font-medium">{stat.label}</div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Learning Phases — Main Column */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Dynamic 12-Week Plan */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -147,78 +371,99 @@ export default function Roadmap() {
                       <Map className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <CardTitle>Your 12-Week Plan</CardTitle>
+                      <CardTitle>Your Structured Learning Plan</CardTitle>
                       <CardDescription>
-                        Structured learning phases to close your skill gaps
+                        Curated phases based on your skills, {hours}h/week availability, and {routine} study routine
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {phases.map((phase, i) => (
-                    <motion.div
-                      key={phase.name}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 + i * 0.1 }}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="flex flex-col items-center">
-                          <div
-                            className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm ${
-                              i === 0
-                                ? "clay-card bg-primary text-primary-foreground"
-                                : i === 1
-                                  ? "clay-card bg-saffron text-foreground"
-                                  : "clay-card bg-sky-light text-sky"
-                            }`}
-                          >
-                            {i + 1}
+                  {phases.map((phase, i) => {
+                    const phaseColors = [
+                      { bg: "bg-primary", text: "text-primary-foreground", glow: "shadow-primary/20" },
+                      { bg: "bg-saffron", text: "text-foreground", glow: "shadow-saffron/20" },
+                      { bg: "bg-sky", text: "text-foreground", glow: "shadow-sky/20" },
+                    ];
+                    const colors = phaseColors[i] || phaseColors[0];
+
+                    return (
+                      <motion.div
+                        key={phase.name}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 + i * 0.15 }}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="flex flex-col items-center">
+                            <motion.div
+                              animate={{ scale: [1, 1.05, 1] }}
+                              transition={{ duration: 3, repeat: Infinity, delay: i * 0.8 }}
+                              className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shadow-lg ${colors.glow} ${colors.bg} ${colors.text}`}
+                            >
+                              {i + 1}
+                            </motion.div>
+                            {i < phases.length - 1 && (
+                              <div className="w-0.5 h-full min-h-[40px] bg-gradient-to-b from-border to-transparent mt-2" />
+                            )}
                           </div>
-                          {i < phases.length - 1 && (
-                            <div className="w-0.5 h-full min-h-[40px] bg-border mt-2" />
-                          )}
-                        </div>
-                        <div className="flex-1 pb-4">
-                          <h3 className="font-bold text-base">
-                            {phase.name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            {phase.description}
-                          </p>
-                          {phase.skills.length > 0 ? (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                              {phase.skills.map((skill) => {
-                                const gapInfo = skillGaps.find(
-                                  (g) => g.skill === skill,
-                                );
-                                return (
-                                  <Badge
-                                    key={skill}
-                                    variant="secondary"
-                                    className="rounded-lg text-xs"
-                                  >
-                                    {gapInfo?.type === "required" && (
-                                      <AlertCircle className="w-3 h-3 mr-1 text-terracotta" />
-                                    )}
-                                    {skill}
-                                  </Badge>
-                                );
-                              })}
+                          <div className="flex-1 pb-4">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-bold text-base">{phase.name}</h3>
+                              {phase.weeks && (
+                                <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">
+                                  {phase.weeks}w
+                                </Badge>
+                              )}
                             </div>
-                          ) : (
-                            <p className="text-xs text-muted-foreground/60 mt-2 italic">
-                              No critical gaps — focus on strengthening existing
-                              skills
-                            </p>
-                          )}
+                            <p className="text-sm text-muted-foreground">{phase.description}</p>
+                            {phase.focus && (
+                              <p className="text-xs text-primary/70 mt-0.5 font-medium">{phase.focus}</p>
+                            )}
+                            {phase.skills && phase.skills.length > 0 ? (
+                              <div className="flex flex-wrap gap-2 mt-3">
+                                {phase.skills.map((skill) => {
+                                  const gapInfo = skillGaps.find((g) => g.skill === skill);
+                                  return (
+                                    <motion.div
+                                      key={skill}
+                                      whileHover={{ scale: 1.05 }}
+                                      className="group/skill"
+                                    >
+                                      <Badge
+                                        variant="secondary"
+                                        className="rounded-lg text-xs cursor-default"
+                                      >
+                                        {gapInfo?.type === "required" && (
+                                          <AlertCircle className="w-3 h-3 mr-1 text-terracotta" />
+                                        )}
+                                        {skill}
+                                        {gapInfo?.resources && gapInfo.resources.length > 0 && (
+                                          <span className="ml-1 text-primary/50 group-hover/skill:text-primary transition-colors">
+                                            ({gapInfo.resources.length})
+                                          </span>
+                                        )}
+                                      </Badge>
+                                    </motion.div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-muted-foreground/60 mt-2 italic">
+                                No critical gaps — focus on strengthening existing skills
+                              </p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </CardContent>
               </Card>
             </motion.div>
+
+            {/* Progress Report */}
+            <ProgressReport skillGaps={skillGaps} />
 
             {/* Top Matched Internships */}
             <motion.div
@@ -242,25 +487,34 @@ export default function Roadmap() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {topInternships.map((internship, i) => (
-                    <div
+                    <motion.div
                       key={`${internship.title}-${i}`}
-                      className="clay-card-sm p-4 flex items-center justify-between"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 + i * 0.05 }}
+                      whileHover={{ x: 4 }}
+                      className="clay-card-sm p-4 flex items-center justify-between group"
                     >
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm truncate">
+                        <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
                           {internship.title}
                         </h4>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {internship.organization}
                         </p>
                       </div>
-                      <div className="clay-inset px-3 py-1.5 text-center shrink-0 ml-3">
+                      <div className="clay-inset px-3 py-1.5 text-center shrink-0 ml-3 group-hover:shadow-md transition-shadow">
                         <div className="text-lg font-extrabold text-primary">
                           {internship.matchScore}%
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
+                  <Link to="/internships">
+                    <Button variant="outline" className="clay-inset border-0 rounded-xl w-full mt-2 text-sm">
+                      View All Internships
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </motion.div>
@@ -298,7 +552,7 @@ export default function Roadmap() {
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 + i * 0.05 }}
-                        className="clay-card-sm p-4"
+                        className="clay-card-sm p-4 group"
                       >
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-bold text-sm">{gap.skill}</h4>

@@ -29,6 +29,9 @@ export const upsertProfile = mutation({
     experience: v.string(),
     location: v.string(),
     bio: v.optional(v.string()),
+    availability: v.optional(v.string()),
+    routine: v.optional(v.string()),
+    hoursPerWeek: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);

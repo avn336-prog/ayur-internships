@@ -219,31 +219,66 @@ export const generate = query({
     // Sort by importance
     gapSkills.sort((a, b) => b.importance - a.importance);
 
-    // Generate weekly plan phases
+    // Determine plan duration and intensity based on availability
+    const availability = profile.availability || "part-time";
+    const hoursPerWeek = profile.hoursPerWeek || 20;
+    const routine = profile.routine || "flexible";
+
+    // Scale plan length to availability
+    const totalWeeks =
+      availability === "full-time" ? 8 :
+      availability === "part-time" ? 12 :
+      availability === "weekends-only" ? 16 : 12;
+
+    const weeksPerPhase = Math.ceil(totalWeeks / 3);
+    const phase1End = weeksPerPhase;
+    const phase2End = weeksPerPhase * 2;
+
+    // Skills per phase based on hours per week
+    const skillsPerPhase =
+      hoursPerWeek >= 40 ? 5 :
+      hoursPerWeek >= 20 ? 3 : 2;
+
+    // Daily time blocks based on routine
+    const routineLabel =
+      routine === "morning" ? "6 AM – 12 PM" :
+      routine === "afternoon" ? "12 PM – 5 PM" :
+      routine === "evening" ? "5 PM – 10 PM" :
+      "Flexible timing";
+
+    const dailyHours = Math.max(1, Math.round(hoursPerWeek / 7 * 10) / 10);
+
+    // Generate phases with detailed week-by-week breakdown
     const phases = [
       {
-        name: "Foundation (Weeks 1-4)",
-        description: "Build core competencies that most internships require",
+        name: `Foundation (Weeks 1–${phase1End})`,
+        description: `Build core competencies — ${Math.round(dailyHours * 3.5)}h/week dedicated`,
         skills: gapSkills
           .filter((g) => g.importance >= 2)
-          .slice(0, 5)
+          .slice(0, skillsPerPhase)
           .map((g) => g.skill),
+        weeks: phase1End,
+        focus: "Core skills most internships require",
       },
       {
-        name: "Specialization (Weeks 5-8)",
-        description: "Deepen knowledge in your target area",
+        name: `Specialization (Weeks ${phase1End + 1}–${phase2End})`,
+        description: `Deepen knowledge in your target area — ${Math.round(dailyHours * 3.5)}h/week dedicated`,
         skills: gapSkills
           .filter((g) => g.importance >= 1 && g.importance < 2)
-          .slice(0, 4)
+          .slice(0, skillsPerPhase)
           .map((g) => g.skill),
+        weeks: weeksPerPhase,
+        focus: "Domain expertise for your target internships",
       },
       {
-        name: "Advanced (Weeks 9-12)",
-        description: "Master preferred skills that set you apart",
+        name: `Advanced (Weeks ${phase2End + 1}–${totalWeeks})`,
+        description: `Master preferred skills that set you apart — ${Math.round(dailyHours * 3.5)}h/week dedicated`,
         skills: gapSkills
           .filter((g) => g.type === "preferred")
-          .slice(0, 3)
+          .slice(0, Math.max(1, skillsPerPhase - 1))
           .map((g) => g.skill),
+        weeks: totalWeeks - phase2End,
+        focus: "Differentiators that make you stand out",
       },
     ];
 
@@ -253,6 +288,9 @@ export const generate = query({
         degree: profile.degree,
         skills: profile.skills,
         interests: profile.interests,
+        availability,
+        routine,
+        hoursPerWeek,
       },
       topInternships: topInternships.map((i) => ({
         title: i.title,

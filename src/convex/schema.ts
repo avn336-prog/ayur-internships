@@ -38,6 +38,9 @@ const schema = defineSchema(
       experience: v.string(), // brief experience description
       location: v.string(), // preferred location
       bio: v.optional(v.string()),
+      availability: v.optional(v.string()), // "full-time" | "part-time" | "weekends-only" | "flexible"
+      routine: v.optional(v.string()), // "morning" | "afternoon" | "evening" | "flexible"
+      hoursPerWeek: v.optional(v.number()), // e.g. 10, 20, 40
       completedProfile: v.boolean(),
     }).index("by_user", ["userId"]),
 

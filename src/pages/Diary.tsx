@@ -18,6 +18,7 @@ import { getErrorMessage } from "@/lib/convex-error";
 import { currentStreak, shiftDate, strToShortDisplay, todayStr } from "@/lib/progress";
 import { useMutation, useQuery } from "convex/react";
 import { Link } from "react-router";
+import BackToDashboard from "@/components/BackToDashboard";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -320,18 +321,12 @@ export default function Diary() {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
+        <BackToDashboard />
         <motion.div
           initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </Link>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl clay-card-sm flex items-center justify-center bg-primary/10">
               <NotebookPen className="w-5 h-5 text-primary" />

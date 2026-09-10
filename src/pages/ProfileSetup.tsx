@@ -26,6 +26,7 @@ import {
   GraduationCap,
   Sparkles,
   CheckCircle2,
+  Clock,
 } from "lucide-react";
 
 const degrees = [
@@ -76,6 +77,9 @@ export default function ProfileSetup() {
   const [location, setLocation] = useState("");
   const [experience, setExperience] = useState("");
   const [bio, setBio] = useState("");
+  const [availability, setAvailability] = useState("");
+  const [routine, setRoutine] = useState("");
+  const [hoursPerWeek, setHoursPerWeek] = useState<number>(20);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,6 +95,9 @@ export default function ProfileSetup() {
       setLocation(existingProfile.location);
       setExperience(existingProfile.experience);
       setBio(existingProfile.bio || "");
+      setAvailability(existingProfile.availability || "");
+      setRoutine(existingProfile.routine || "");
+      setHoursPerWeek(existingProfile.hoursPerWeek || 20);
       setSelectedSkills(existingProfile.skills);
       setSelectedInterests(existingProfile.interests);
     }
@@ -147,6 +154,9 @@ export default function ProfileSetup() {
         location,
         experience,
         bio,
+        availability: availability || undefined,
+        routine: routine || undefined,
+        hoursPerWeek: hoursPerWeek || undefined,
         skills: selectedSkills,
         interests: selectedInterests,
       });
@@ -450,6 +460,92 @@ export default function ProfileSetup() {
                         {interest}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Availability & Routine */}
+                <div className="clay-inset rounded-2xl p-5 space-y-4">
+                  <h4 className="font-bold text-sm flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-saffron" />
+                    Availability & Routine
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    Help us tailor your learning roadmap to your schedule
+                  </p>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      How much time can you dedicate?
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: "full-time", label: "Full-time", desc: "40+ hrs/week" },
+                        { value: "part-time", label: "Part-time", desc: "20-30 hrs/week" },
+                        { value: "weekends-only", label: "Weekends", desc: "10-15 hrs/week" },
+                        { value: "flexible", label: "Flexible", desc: "Varies each week" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setAvailability(opt.value)}
+                          className={`p-3 rounded-xl text-left transition-all duration-200 ${
+                            availability === opt.value
+                              ? "clay-card bg-primary/10 border border-primary/30"
+                              : "clay-inset hover:bg-muted/50"
+                          }`}
+                        >
+                          <div className={`text-sm font-semibold ${availability === opt.value ? "text-primary" : ""}`}>{opt.label}</div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      Preferred study time
+                    </Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: "morning", label: "🌅 Morning", desc: "6 AM - 12 PM" },
+                        { value: "afternoon", label: "☀️ Afternoon", desc: "12 PM - 5 PM" },
+                        { value: "evening", label: "🌙 Evening", desc: "5 PM - 10 PM" },
+                        { value: "flexible", label: "🔄 Flexible", desc: "Any time works" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setRoutine(opt.value)}
+                          className={`p-3 rounded-xl text-left transition-all duration-200 ${
+                            routine === opt.value
+                              ? "clay-card bg-saffron/10 border border-saffron/30"
+                              : "clay-inset hover:bg-muted/50"
+                          }`}
+                        >
+                          <div className={`text-sm font-semibold ${routine === opt.value ? "text-saffron" : ""}`}>{opt.label}</div>
+                          <div className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      Hours per week: <span className="text-foreground font-bold">{hoursPerWeek}h</span>
+                    </Label>
+                    <input
+                      type="range"
+                      min={5}
+                      max={60}
+                      step={5}
+                      value={hoursPerWeek}
+                      onChange={(e) => setHoursPerWeek(Number(e.target.value))}
+                      className="w-full accent-primary"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>5h (light)</span>
+                      <span>60h (intensive)</span>
+                    </div>
                   </div>
                 </div>
 

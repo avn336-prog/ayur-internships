@@ -13,6 +13,7 @@ import { api } from "@/convex/_generated/api";
 import { usePageMeta } from "@/hooks/use-page-meta";
 import { getErrorMessage } from "@/lib/convex-error";
 import { useQuery, useMutation } from "convex/react";
+import BackToDashboard from "@/components/BackToDashboard";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
   Search,
@@ -139,18 +140,12 @@ export default function Internships() {
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
+        <BackToDashboard />
         <motion.div
           initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </Link>
           <h1 className="text-3xl font-extrabold tracking-tight">
             Browse Internships
           </h1>
