@@ -17,11 +17,9 @@ import { usePageMeta } from "@/hooks/use-page-meta";
 import { getErrorMessage } from "@/lib/convex-error";
 import { lastNDates, shiftDate, strToShortDisplay, todayStr } from "@/lib/progress";
 import { useMutation, useQuery } from "convex/react";
-import { Link } from "react-router";
 import BackToDashboard from "@/components/BackToDashboard";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   CalendarDays,
   CheckCircle2,
   ChevronLeft,

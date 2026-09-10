@@ -239,13 +239,6 @@ export const generate = query({
       hoursPerWeek >= 40 ? 5 :
       hoursPerWeek >= 20 ? 3 : 2;
 
-    // Daily time blocks based on routine
-    const routineLabel =
-      routine === "morning" ? "6 AM – 12 PM" :
-      routine === "afternoon" ? "12 PM – 5 PM" :
-      routine === "evening" ? "5 PM – 10 PM" :
-      "Flexible timing";
-
     const dailyHours = Math.max(1, Math.round(hoursPerWeek / 7 * 10) / 10);
 
     // Generate phases with detailed week-by-week breakdown

@@ -22,13 +22,12 @@ import {
   IndianRupee,
   Building2,
   Filter,
-  ArrowLeft,
   Briefcase,
   CheckCircle2,
   Loader2,
   ExternalLink,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { toast } from "sonner";
 
 const typeColors: Record<string, string> = {
