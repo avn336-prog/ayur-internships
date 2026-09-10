@@ -1,0 +1,23 @@
+// Cloudflare Workers configuration — hosts the built Vite SPA as static assets.
+// The Convex backend (https://clever-hedgehog-379.convex.cloud) stays as-is;
+// this Worker only serves the frontend and rewrites all routes to index.html
+// (SPA fallback) so client-side routing works on deep links like /dashboard.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ayur-internships",
+  "compatibility_date": "2026-09-10",
+  // Assets-only Worker: no `main` script — Cloudflare serves ./dist directly.
+  "assets": {
+    "directory": "./dist",
+    // Serve index.html for any path that doesn't match a static file (SPA).
+    "not_found_handling": "single-page-application",
+    // Long-cache fingerprinted assets; index.html is always revalidated.
+    "html_handling": "auto-trailing-slash"
+  },
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
+  }
+}
