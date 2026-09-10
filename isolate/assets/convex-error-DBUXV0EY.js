@@ -1,0 +1,1 @@
+function n(a,s){if(a&&typeof a=="object"){const e=a;if(e.data&&typeof e.data=="object"){const t=e.data;if(typeof t.message=="string"&&t.message.trim())return t.message;if(t.code==="RATE_LIMITED")return"Too many attempts — please wait a few minutes and try again."}if(typeof e.message=="string"&&e.message.trim())return e.message}return s}export{n as g};

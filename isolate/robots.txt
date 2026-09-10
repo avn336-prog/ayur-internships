@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Auth and account pages should not appear in search results
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /internships
+Disallow: /roadmap
+Disallow: /diary
+Disallow: /planner
+
+# Update this host when the site is deployed to its final domain.
+Sitemap: https://www.ayursetu.in/sitemap.xml
