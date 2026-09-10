@@ -171,16 +171,18 @@ export default function Dashboard() {
         >
           <Link
             to="/roadmap"
-            className="clay-card p-5 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 group"
+            className="clay-card p-5 relative overflow-hidden group hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-saffron/8 via-transparent to-saffron-light/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-saffron/10 blur-xl group-hover:scale-150 transition-transform duration-700" />
+            <div className="relative flex items-center justify-between mb-3">
+              <motion.div whileHover={{ rotate: 12 }} className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <Map className="w-5 h-5 text-saffron" />
-              </div>
-              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </motion.div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
             </div>
-            <h3 className="font-bold text-base">Learning Roadmap</h3>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+            <h3 className="font-bold text-base relative">Learning Roadmap</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed relative">
               Skill-gap analysis with a curated 12-week plan built from your
               profile and top internship matches.
             </p>
@@ -188,16 +190,18 @@ export default function Dashboard() {
 
           <Link
             to="/diary"
-            className="clay-card p-5 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 group"
+            className="clay-card p-5 relative overflow-hidden group hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-leaf-light/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-primary/10 blur-xl group-hover:scale-150 transition-transform duration-700" />
+            <div className="relative flex items-center justify-between mb-3">
+              <motion.div whileHover={{ rotate: -12 }} className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <NotebookPen className="w-5 h-5 text-primary" />
-              </div>
-              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </motion.div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
             </div>
-            <h3 className="font-bold text-base">Internship Diary</h3>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+            <h3 className="font-bold text-base relative">Internship Diary</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed relative">
               {diaryEntries === undefined ? (
                 <span className="inline-flex items-center gap-1">
                   <Flame className="w-3 h-3 text-terracotta" />
@@ -205,7 +209,9 @@ export default function Dashboard() {
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5 text-terracotta" />
+                  <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                    <Flame className="w-3.5 h-3.5 text-terracotta" />
+                  </motion.span>
                   <span className="font-semibold text-foreground">
                     {diaryStreak}-day streak
                   </span>
@@ -219,16 +225,18 @@ export default function Dashboard() {
 
           <Link
             to="/planner"
-            className="clay-card p-5 hover:-translate-y-0.5 hover:shadow-xl transition-all duration-200 group"
+            className="clay-card p-5 relative overflow-hidden group hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
+            <div className="absolute inset-0 bg-gradient-to-br from-sky/8 via-transparent to-sky-light/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full bg-sky/10 blur-xl group-hover:scale-150 transition-transform duration-700" />
+            <div className="relative flex items-center justify-between mb-3">
+              <motion.div whileHover={{ scale: 1.15 }} className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <ClipboardList className="w-5 h-5 text-sky" />
-              </div>
-              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </motion.div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
             </div>
-            <h3 className="font-bold text-base">Daily Planner</h3>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+            <h3 className="font-bold text-base relative">Daily Planner</h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed relative">
               {tasksToday === undefined ? (
                 <span className="inline-block w-20 h-3 bg-muted rounded animate-pulse" />
               ) : todayTasks.length > 0 ? (
@@ -277,20 +285,28 @@ export default function Dashboard() {
               value: acceptedCount,
               color: "text-terracotta",
             },
-          ].map((stat) => (
-            <div key={stat.label} className="clay-card p-5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
+          ].map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 15, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.1 + i * 0.08, type: "spring", stiffness: 200 }}
+              whileHover={{ y: -3, scale: 1.02 }}
+              className="clay-card p-5 group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
+              <div className="relative flex items-center gap-3">
+                <motion.div whileHover={{ rotate: 10, scale: 1.1 }} className="w-10 h-10 rounded-2xl clay-inset flex items-center justify-center">
                   <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                </div>
+                </motion.div>
                 <div>
-                  <div className="text-2xl font-extrabold">{stat.value}</div>
+                  <div className="text-2xl font-extrabold tabular-nums">{stat.value}</div>
                   <div className="text-xs text-muted-foreground font-medium">
                     {stat.label}
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </motion.div>
 
