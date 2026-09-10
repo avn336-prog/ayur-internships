@@ -8,9 +8,11 @@
  * @module
  */
 
+import type * as aiAssistant from "../aiAssistant.js";
 import type * as applications from "../applications.js";
 import type * as auth from "../auth.js";
 import type * as auth_emailOtp from "../auth/emailOtp.js";
+import type * as chatMessages from "../chatMessages.js";
 import type * as dailyTasks from "../dailyTasks.js";
 import type * as diary from "../diary.js";
 import type * as enquiries from "../enquiries.js";
@@ -31,9 +33,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  aiAssistant: typeof aiAssistant;
   applications: typeof applications;
   auth: typeof auth;
   "auth/emailOtp": typeof auth_emailOtp;
+  chatMessages: typeof chatMessages;
   dailyTasks: typeof dailyTasks;
   diary: typeof diary;
   enquiries: typeof enquiries;

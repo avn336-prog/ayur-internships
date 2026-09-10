@@ -120,6 +120,20 @@ const schema = defineSchema(
       createdAt: v.number(),
     }).index("by_user_date", ["userId", "date"])
       .index("by_user", ["userId"]),
+
+    // AI assistant chat messages
+    chatMessages: defineTable({
+      userId: v.id("users"),
+      role: v.union(v.literal("user"), v.literal("assistant")),
+      content: v.string(),
+      actions: v.optional(v.array(v.object({
+        type: v.string(),
+        status: v.string(),
+        detail: v.string(),
+      }))),
+      createdAt: v.number(),
+    }).index("by_user", ["userId"])
+      .index("by_user_created", ["userId", "createdAt"]),
   },
   {
     schemaValidation: false,

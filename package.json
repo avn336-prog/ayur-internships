@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.90",
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
     "@jridgewell/trace-mapping": "^0.3.31",
     "@oslojs/crypto": "^1.0.1",

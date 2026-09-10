@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { RequireAuth } from "@/components/RequireAuth";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConsentBanner } from "@/components/ConsentBanner";
+import AiAssistant from "@/components/AiAssistant";
 import { ConvexReactClient } from "convex/react";
 import React, { StrictMode, useEffect, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
@@ -170,6 +171,7 @@ createRoot(document.getElementById("root")!).render(
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          <AiAssistant />
           <ConsentBanner />
         </BrowserRouter>
         <Toaster />
