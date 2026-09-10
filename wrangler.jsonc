@@ -4,7 +4,8 @@
 // (SPA fallback) so client-side routing works on deep links like /dashboard.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ayur-internships",
+  // Must match the Worker name in Cloudflare Workers Builds (repo-connected).
+  "name": "ayursetu",
   "compatibility_date": "2026-09-10",
   // Assets-only Worker: no `main` script — Cloudflare serves ./dist directly.
   "assets": {
@@ -14,6 +15,9 @@
     // Long-cache fingerprinted assets; index.html is always revalidated.
     "html_handling": "auto-trailing-slash"
   },
+  // Public site: keep the workers.dev URL and preview URLs enabled.
+  "workers_dev": true,
+  "preview_urls": true,
   "observability": {
     "enabled": true,
     "traces": {
