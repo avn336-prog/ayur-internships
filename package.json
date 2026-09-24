@@ -1,16 +1,21 @@
 {
-  "name": "vite-template",
+  "name": "ayursetu",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "AyurSetu — Ayurveda & AYUSH internship matching, learning roadmaps and internship diary for Indian students",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "preview": "vite preview",
-    "deploy:cf": "npm run build && wrangler deploy",
-    "deploy:cf:dry": "npm run build && wrangler deploy --dry-run",
+    "deploy:cf": "bun run build && wrangler deploy",
+    "deploy:cf:dry": "bun run build && wrangler deploy --dry-run",
     "cf:tail": "wrangler tail"
   },
   "dependencies": {
@@ -47,7 +52,6 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/vite": "^4.1.17",
     "@vly-ai/integrations": "^0.6.14",
-    "@zumer/snapdom": "^2.0.1",
     "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -57,7 +61,6 @@
     "docx": "^9.7.1",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.25",
-    "hono": "^4.10.7",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.555.0",
     "next-themes": "^0.4.6",
@@ -93,6 +96,7 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.1",
     "vite": "^7.2.6",
+    "vitest": "^5.0.1",
     "wrangler": "^4.130.0"
   }
 }
